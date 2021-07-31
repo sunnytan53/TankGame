@@ -1,0 +1,7 @@
+0: nothing
+1: unbreakable border
+2: unbreakable wall
+4: breakable wall
+5: power up
+6: power up
+7: power up
