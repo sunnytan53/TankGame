@@ -13,7 +13,7 @@ public class BreakableWall extends GameInstanceControlBlock {
         this.instances.add(new BreakableWallInstance(x, y));
     }
 
-    private class BreakableWallInstance extends Stationary{
+    private class BreakableWallInstance extends StationaryInstance {
         public BreakableWallInstance(int x, int y) {
             super(x, y, getImage());
         }

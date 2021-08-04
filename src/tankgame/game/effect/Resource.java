@@ -9,6 +9,9 @@ import java.io.IOException;
 
 import static javax.imageio.ImageIO.read;
 
+/**
+ * Methods for reading different types of resources
+ */
 public class Resource {
     public static BufferedImage readResourceImage(String name) {
         try {

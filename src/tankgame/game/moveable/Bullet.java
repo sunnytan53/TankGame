@@ -13,7 +13,7 @@ public class Bullet extends GameInstanceControlBlock {
         this.instances.add(new BulletInstance(x, y, angle));
     }
 
-    private class BulletInstance extends Moveable {
+    private class BulletInstance extends MoveableInstance {
         public BulletInstance(int x, int y, float angle) {
             super(x, y, 0, 0, angle, 5, getImage());
         }

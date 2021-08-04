@@ -4,8 +4,8 @@ import tankgame.game.GameInstance;
 
 import java.awt.image.BufferedImage;
 
-public abstract class Stationary extends GameInstance {
-    public Stationary(int x, int y, BufferedImage img) {
+public abstract class StationaryInstance extends GameInstance {
+    public StationaryInstance(int x, int y, BufferedImage img) {
         super(x, y, 0, img);
     }
 

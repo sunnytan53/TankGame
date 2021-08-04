@@ -1,39 +1,45 @@
 package tankgame.game;
 
+import tankgame.game.effect.Sound;
+import tankgame.game.effect.Visual;
 import tankgame.game.moveable.Bullet;
-import tankgame.game.moveable.Moveable;
+import tankgame.game.moveable.MoveableInstance;
+import tankgame.game.stationary.BreakableWall;
+import tankgame.game.stationary.PowerupInstance;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Random;
 
 public class Tank extends GameInstanceControlBlock {
     public Tank(BufferedImage tank, BufferedImage bullet) {
         super(tank);
+        int[][] arr = {{212, 212}, {1836, 812}};
         for (int i = 0; i < 2; i++) {
-            addInstance(0, 0, 0);
+            addInstance(arr[i][0], arr[i][1], 0);
             ((TankInstance) this.instances.get(i)).setBulletCB(bullet);
         }
     }
 
-    public void addInstance(int unused1, int unused2, float unused3) {
-        this.instances.add(new TankInstance());
-    }
-
+    // get the two tanks reference as an array
     public TankInstance[] getTankInstance() {
         TankInstance[] ti = {(TankInstance) this.instances.get(0), (TankInstance) this.instances.get(1)};
         return ti;
     }
 
+    // reset the tanks
     public void reset() {
         TankInstance[] ti = getTankInstance();
-        ti[0].x = 200;
-        ti[0].y = 200;
-        ti[0].oldX = 200;
-        ti[0].oldY = 200;
-        ti[1].x = 300;
-        ti[1].y = 300;
-        ti[1].oldX = 300;
-        ti[1].oldY = 300;
+        for (TankInstance t : ti) {
+            t.reset();
+        }
+    }
+
+
+    @Override
+    public void addInstance(int x, int y, float unused3) {
+        this.instances.add(new TankInstance(x, y));
     }
 
     @Override
@@ -45,35 +51,142 @@ public class Tank extends GameInstanceControlBlock {
         }
     }
 
-    protected class TankInstance extends Moveable {
+    // draw the tank information at fixed position on the screen
+    private final int[] infoX = {50, 750};
+    private final int[] infoY = {550, 600, 650, 700};
 
-        private final float ROTATIONSPEED = 3.0f;
+    public void drawInfo(Graphics2D g2) {
+        TankInstance[] ti = getTankInstance();
+        for (int i = 0; i < 2; i++) {
+            // display health, show in red when not full, in green when full
+            g2.setColor(ti[i].getHealth() > 2 ? Color.GREEN : Color.RED);
+            g2.setFont(new Font("TimesRoman", Font.PLAIN, 40));
+            g2.drawString("Health: " + ti[i].getHealth(), infoX[i], infoY[0]);
 
-        private boolean UpPressed;
-        private boolean DownPressed;
-        private boolean RightPressed;
-        private boolean LeftPressed;
-        private boolean ShootPressed;
+            // display lives, show in red when not full, in green when full
+            g2.setColor(ti[i].getLive() > 2 ? Color.ORANGE : Color.RED);
+            g2.setFont(new Font("TimesRoman", Font.PLAIN, 40));
+            g2.drawString("Live(s): " + ti[i].getLive(), infoX[i], infoY[1]);
 
-        private Bullet bulletCB = null;
+            // display cooldown tick, show in blue when max, in pink for normal
+            g2.setColor(ti[i].getCooldownTick() > 50 ? Color.PINK : Color.BLUE);
+            g2.setFont(new Font("TimesRoman", Font.PLAIN, 40));
+            g2.drawString("Cooldown: " + ti[i].getCooldownTick(), infoX[i], infoY[2]);
 
-        private short cooldownTick = 100;
-        private short shootTick = -1;
-
-        private int oldX, oldY;
-
-        public TankInstance() {
-            super(0, 0, 0, 0, 0, 2, getImage());
+            // display speed, show in blue when max, in yellow for normal
+            g2.setColor(ti[i].getSpeed() > 2 ? Color.BLUE : Color.YELLOW);
+            g2.setFont(new Font("TimesRoman", Font.PLAIN, 40));
+            g2.drawString("Speed: " + ti[i].getSpeed(), infoX[i], infoY[3]);
         }
+    }
 
-        public void setBulletCB(BufferedImage img) {
-            if (this.bulletCB == null) {
-                this.bulletCB = new Bullet(img);
+    // check collision and also border
+    public void checkCollision(ArrayList<GameInstanceControlBlock> stationaryCB, Sound sound, Visual visual) {
+        Tank.TankInstance[] ti = getTankInstance();
+
+        // advanced way to check border using collision
+        if (ti[0].hitbox.intersects(ti[1].hitbox)) {
+            for (TankInstance t : ti) {
+                t.restorePosition();
             }
         }
 
-        public Bullet getBulletCB() {
-            return bulletCB;
+        for (int i = 0; i < ti.length; i++) {
+
+            // check tanks with map instances
+            for (GameInstanceControlBlock cb : stationaryCB) {
+                for (int j = 0; j < cb.instances.size(); j++) {
+                    GameInstance gi = cb.instances.get(j);
+                    if (ti[i].hitbox.intersects(gi.hitbox)) {
+                        if (gi instanceof PowerupInstance pi) {
+                            pi.updateTank(ti[i]);
+                            cb.instances.remove(gi);
+                        }
+                        ti[i].restorePosition();
+                    }
+                }
+            }
+
+            // check bullets with map instances
+            // must keep separately to detect multiple blocks
+            for (int k = 0; k < ti[i].bulletCB.instances.size(); k++) {
+                GameInstance b = ti[i].bulletCB.instances.get(k);
+                boolean destroy = false;
+
+                for (GameInstanceControlBlock cb : stationaryCB) {
+                    for (int l = 0; l < cb.instances.size(); l++) {
+                        GameInstance gi = cb.instances.get(l);
+                        if (b.hitbox.intersects(gi.hitbox)) {
+                            destroy = true;
+                            if (cb instanceof BreakableWall) {
+                                cb.instances.remove(gi);
+                                l--;
+
+                                // drop powerup when removing a breakable wall
+                                int rand = new Random().nextInt(100);
+                                int indexOfPowerup = 0;
+                                if (rand < 3) {
+                                    indexOfPowerup = 4;
+                                } else if (rand < 9) {
+                                    indexOfPowerup = 3;
+                                } else if (rand < 21) {
+                                    indexOfPowerup = 2;
+                                }
+
+                                if (indexOfPowerup > 1) {
+                                    stationaryCB.get(indexOfPowerup).addInstance(gi.getX(), gi.getY(), 0);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // check tanks with bullets against each other
+                int tankIndex = 0;
+                if (i == 0) {
+                    tankIndex = 1;
+                }
+                if (ti[tankIndex].hitbox.intersects(b.hitbox)) {
+                    ti[tankIndex].reduceHealth();
+                    destroy = true;
+                }
+
+                // play the explosion
+                if (destroy) {
+                    visual.addLocation(b.getX(), b.getY());
+                    sound.play();
+                    ti[i].bulletCB.instances.remove(b);
+                    k--;
+                }
+            }
+        }
+    }
+
+    // check if one of the tank is fatal
+    public boolean checkEnd() {
+        TankInstance[] ti = getTankInstance();
+        return (ti[0].getLive() < 1 || ti[1].getLive() < 1);
+    }
+
+    /**
+     * Tank Instance
+     */
+    public class TankInstance extends MoveableInstance {
+
+        private final float ROTATIONSPEED = 3.0f;
+
+        private boolean UpPressed, DownPressed, RightPressed, LeftPressed, ShootPressed;
+
+        private Bullet bulletCB = null;
+
+        private int cooldownTick = 100, shootTick = -1, oldX, oldY, health, live;
+
+        private final int startX, startY;
+
+        public TankInstance(int startX, int startY) {
+            super(0, 0, 0, 0, 0, 2, getImage());
+            this.startX = startX;
+            this.startY = startY;
         }
 
         protected void toggleUpPressed() {
@@ -116,6 +229,21 @@ public class Tank extends GameInstanceControlBlock {
             this.ShootPressed = false;
         }
 
+        private void rotateLeft() {
+            this.angle -= this.ROTATIONSPEED;
+        }
+
+        private void rotateRight() {
+            this.angle += this.ROTATIONSPEED;
+        }
+
+        private void moveBackwards() {
+            vx = (int) Math.round(R * Math.cos(Math.toRadians(angle)));
+            vy = (int) Math.round(R * Math.sin(Math.toRadians(angle)));
+            x -= speed * vx;
+            y -= speed * vy;
+        }
+
         @Override
         public void update() {
             if (this.UpPressed) {
@@ -150,24 +278,81 @@ public class Tank extends GameInstanceControlBlock {
             bulletCB.updateInstances();
         }
 
-        private void rotateLeft() {
-            this.angle -= this.ROTATIONSPEED;
+        public void setBulletCB(BufferedImage img) {
+            if (this.bulletCB == null) {
+                this.bulletCB = new Bullet(img);
+            }
         }
 
-        private void rotateRight() {
-            this.angle += this.ROTATIONSPEED;
-        }
-
-        private void moveBackwards() {
-            vx = (int) Math.round(R * Math.cos(Math.toRadians(angle)));
-            vy = (int) Math.round(R * Math.sin(Math.toRadians(angle)));
-            x -= vx;
-            y -= vy;
-        }
-
+        // restore the position when can't move
         public void restorePosition() {
-            this.x = oldX;
-            this.y = oldY;
+            x = oldX;
+            y = oldY;
+        }
+
+        // reset the tank's status
+        public void reset() {
+            x = startX;
+            y = startY;
+            oldX = startX;
+            oldY = startY;
+            health = 3;
+            live = 3;
+            speed = 1;
+            cooldownTick = 100;
+        }
+
+        /**
+         * status change functions
+         */
+        public void reduceCooldown() {
+            if (cooldownTick > 50) {
+                cooldownTick -= 10;
+            }
+        }
+
+        public void reduceHealth() {
+            if (health > 1) {
+                health--;
+            } else {
+                health = 3;
+                live--;
+                x = startX;
+                y = startY;
+                oldX = startX;
+                oldY = startY;
+            }
+        }
+
+        public void increaseHealth() {
+            if (health < 3) {
+                health++;
+            }
+        }
+
+        public void increaseSpeed() {
+            if (speed < 3) {
+                speed++;
+            }
+        }
+
+        /**
+         * status getter for information
+         */
+        public int getHealth() {
+            return health;
+        }
+
+        public int getLive() {
+            return live;
+        }
+
+        public int getCooldownTick() {
+            return cooldownTick;
+        }
+
+        public int getSpeed() {
+            return speed;
         }
     }
 }

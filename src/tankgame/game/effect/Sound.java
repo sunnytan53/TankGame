@@ -3,6 +3,9 @@ package tankgame.game.effect;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 
+/**
+ * Store the audio and play when called
+ */
 public class Sound {
     private Clip clip;
 

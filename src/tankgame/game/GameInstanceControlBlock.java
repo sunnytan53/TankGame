@@ -5,10 +5,16 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
+/**
+ * The template of a control block for instances
+ */
 public abstract class GameInstanceControlBlock {
-    private static ArrayList<BufferedImage> imgList = new ArrayList<>();
 
+    // stores all images together and the real control block only stores an index
+    private static ArrayList<BufferedImage> imgList = new ArrayList<>();
     private int imgIndex;
+
+    // stores the instances into arraylist for easy access
     protected ArrayList<GameInstance> instances = new ArrayList<>();
 
     public GameInstanceControlBlock(BufferedImage img) {
@@ -22,6 +28,7 @@ public abstract class GameInstanceControlBlock {
         return imgList.get(imgIndex);
     }
 
+    // a generally used drawImage function for all instances
     public void drawImage(Graphics g) {
         for (GameInstance gi : instances) {
             Graphics2D g2d = (Graphics2D) g;
@@ -33,10 +40,16 @@ public abstract class GameInstanceControlBlock {
         }
     }
 
+    // update all instances, leave empty for stationary instances
     public void updateInstances() {
         for (GameInstance gi : instances) {
             gi.update();
         }
+    }
+
+    // reset the instances when reloading the map
+    public void resetInstances() {
+        instances = new ArrayList<>();
     }
 
     public abstract void addInstance(int x, int y, float angle);

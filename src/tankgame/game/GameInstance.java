@@ -3,6 +3,9 @@ package tankgame.game;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
+/**
+ * The template of true instances
+ */
 public abstract class GameInstance {
     protected int x, y;
     protected float angle;
