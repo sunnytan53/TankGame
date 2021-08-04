@@ -132,7 +132,12 @@ public class TRE extends JPanel implements Runnable {
 
         // read the image from resource folder
         this.world = Resource.readResourceImage("background.png");
-        tankCB = new Tank(Resource.readResourceImage("tank.png"), Resource.readResourceImage("bullet.png"));
+        BufferedImage[] healthBar = {
+                Resource.readResourceImage("health1.png"),
+                Resource.readResourceImage("health2.png"),
+                Resource.readResourceImage("health3.png"),
+                Resource.readResourceImage("health4.png")};
+        tankCB = new Tank(Resource.readResourceImage("tank.png"), Resource.readResourceImage("bullet.png"), healthBar);
 
         // read effect resources
         explosionSound = new Sound("explosion.wav");

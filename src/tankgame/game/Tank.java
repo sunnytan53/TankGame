@@ -13,13 +13,17 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class Tank extends GameInstanceControlBlock {
-    public Tank(BufferedImage tank, BufferedImage bullet) {
+    // store health image for tank control block
+    private Image healthBar[];
+
+    public Tank(BufferedImage tank, BufferedImage bullet, BufferedImage[] health) {
         super(tank);
         int[][] arr = {{212, 212}, {1836, 812}};
         for (int i = 0; i < 2; i++) {
             addInstance(arr[i][0], arr[i][1], 0);
             ((TankInstance) this.instances.get(i)).setBulletCB(bullet);
         }
+        this.healthBar = health;
     }
 
     // get the two tanks reference as an array
@@ -36,18 +40,19 @@ public class Tank extends GameInstanceControlBlock {
         }
     }
 
-
     @Override
     public void addInstance(int x, int y, float unused3) {
         this.instances.add(new TankInstance(x, y));
     }
 
+    // Tank's drawImage should trigger its Bullet's drawImage
     @Override
     public void drawImage(Graphics g) {
         super.drawImage(g);
         TankInstance[] ti = getTankInstance();
         for (int i = 0; i < ti.length; i++) {
             ti[i].bulletCB.drawImage(g);
+            g.drawImage(healthBar[ti[i].getHealth()-1], ti[i].x - 40, ti[i].y - 60, null);
         }
     }
 
@@ -58,13 +63,14 @@ public class Tank extends GameInstanceControlBlock {
     public void drawInfo(Graphics2D g2) {
         TankInstance[] ti = getTankInstance();
         for (int i = 0; i < 2; i++) {
-            // display health, show in red when not full, in green when full
-            g2.setColor(ti[i].getHealth() > 2 ? Color.GREEN : Color.RED);
+            // display health as a bar
+            g2.setColor(Color.GREEN);
             g2.setFont(new Font("TimesRoman", Font.PLAIN, 40));
-            g2.drawString("Health: " + ti[i].getHealth(), infoX[i], infoY[0]);
+            g2.drawString("Health: ", infoX[i], infoY[0]);
+            g2.drawImage(healthBar[ti[i].getHealth()-1], infoX[i] + 130, infoY[0] - 25, null);
 
             // display lives, show in red when not full, in green when full
-            g2.setColor(ti[i].getLive() > 2 ? Color.ORANGE : Color.RED);
+            g2.setColor(Color.RED);
             g2.setFont(new Font("TimesRoman", Font.PLAIN, 40));
             g2.drawString("Live(s): " + ti[i].getLive(), infoX[i], infoY[1]);
 
@@ -74,7 +80,7 @@ public class Tank extends GameInstanceControlBlock {
             g2.drawString("Cooldown: " + ti[i].getCooldownTick(), infoX[i], infoY[2]);
 
             // display speed, show in blue when max, in yellow for normal
-            g2.setColor(ti[i].getSpeed() > 2 ? Color.BLUE : Color.YELLOW);
+            g2.setColor(ti[i].getSpeed() > 2 ? Color.BLUE : Color.ORANGE);
             g2.setFont(new Font("TimesRoman", Font.PLAIN, 40));
             g2.drawString("Speed: " + ti[i].getSpeed(), infoX[i], infoY[3]);
         }
@@ -98,6 +104,7 @@ public class Tank extends GameInstanceControlBlock {
                 for (int j = 0; j < cb.instances.size(); j++) {
                     GameInstance gi = cb.instances.get(j);
                     if (ti[i].hitbox.intersects(gi.hitbox)) {
+                        // take up the power up and modify our tank
                         if (gi instanceof PowerupInstance pi) {
                             pi.updateTank(ti[i]);
                             cb.instances.remove(gi);
@@ -296,7 +303,7 @@ public class Tank extends GameInstanceControlBlock {
             y = startY;
             oldX = startX;
             oldY = startY;
-            health = 3;
+            health = 4;
             live = 3;
             speed = 1;
             cooldownTick = 100;
@@ -315,7 +322,7 @@ public class Tank extends GameInstanceControlBlock {
             if (health > 1) {
                 health--;
             } else {
-                health = 3;
+                health = 4;
                 live--;
                 x = startX;
                 y = startY;
