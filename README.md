@@ -3,8 +3,8 @@
 
 | Student Information |                |
 |:-------------------:|----------------|
-|  Student Name       |   Name Here    |
-|  Student Email      |   Email Here   |
+|  Student Name       |   Haoyuan Tan(Sunny)    |
+|  Student Email      |   htan6@mail.sfsu.edu   |
 
 ## src Folder Purpose 
 src folder is to be used to store source code only.
@@ -23,24 +23,34 @@ The jar folder is to be used to store the built jar of your term-project.
 
 # Required Information when Submitting Tank Game
 
-## Version of Java Used:
+## Version of Java Used: Azul 16.0.1 for Mac M1
 
-## IDE used: 
+## IDE used: IntelliJ IDEA 2021.2 (Ultimate Edition)
 
 ## Steps to Import project into IDE:
+1. choose "get from VCS"
+2. clone the repository
+3. Click File->Project Structure
+4. Set up a valid JAVA SDK from your PC
 
 ## Steps to Build your Project:
+1. Set up a valid JAVA SDK
+2. Click Build->Build Project
  
 ## Steps to run your Project:
+1. Go to jar folder
+2. Double click to run in folder
+OR
+3. Right click on the jar to run in IDE
 
 ## Controls to play your Game:
 
 |               | Player 1 | Player 2 |
 |---------------|----------|----------|
-|  Forward      |          |          |
-|  Backward     |          |          |
-|  Rotate left  |          |          |
-|  Rotate Right |          |          |
-|  Shoot        |          |          |
+|  Forward      |     UP     |     W     |
+|  Backward     |     DOWN     |   S       |
+|  Rotate left  |     LEFT     |   A       |
+|  Rotate Right |     RIGHT     |  D        |
+|  Shoot        |     ENTER     |  SPACE        |
 
 <!-- you may add more controls if you need to. -->
